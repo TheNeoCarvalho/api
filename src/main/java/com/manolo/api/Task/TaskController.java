@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController
-@RequestMapping("/task")
+@RequestMapping("/tasks")
 public class TaskController {
 
 
@@ -18,8 +18,7 @@ public class TaskController {
   @PostMapping("/")
   public TaskModel create(@RequestBody TaskModel taskModel) {
 
-    var task = this.taskRepository.save(taskModel);
-    return task;
+    return this.taskRepository.save(taskModel);
 
   }
 

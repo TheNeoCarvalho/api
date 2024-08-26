@@ -25,33 +25,36 @@ public class FilterTaskAuth extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
 
-        var authorization = request.getHeader("Authorization");
-        var auth_encoded = authorization.substring("Basic".length()).trim();
+        var serverPath = request.getServletPath();
 
-        byte[] auth_decoded = Base64.getDecoder().decode(auth_encoded);
-        var auth = new String(auth_decoded);
+        if (serverPath.equals("/tasks/")) {
+            var authorization = request.getHeader("Authorization");
+            var auth_encoded = authorization.substring("Basic".length()).trim();
 
-        String[] credentials = auth.split(":");
+            byte[] auth_decoded = Base64.getDecoder().decode(auth_encoded);
+            var auth = new String(auth_decoded);
 
-        var username = credentials[0];
-        var password = credentials[1];
+            String[] credentials = auth.split(":");
 
-        var user = this.UserRepository.findByUsername(username);
-        
-        if (user == null) {
-          response.sendError(401, "User not authorized");
-        } else {
-          var password_verify = BCrypt.verifyer().verify(password.toCharArray(), user.getPassword());
-          if (password_verify.verified) {
-              response.sendError(401);
+            var username = credentials[0];
+            var password = credentials[1];
+
+            var user = this.UserRepository.findByUsername(username);
+
+            if (user == null) {
+                response.sendError(401, "User not authorized");
+            } else {
+                var password_verify = BCrypt.verifyer().verify(password.toCharArray(), user.getPassword());
+                if (password_verify.verified) {
+                    response.sendError(401);
+                }
+                else {
+                    filterChain.doFilter(request, response);
+                }
             }
+        }else {
+            filterChain.doFilter(request, response);
         }
 
-
-
-
-        filterChain.doFilter(request, response);
-
-      }
-
+  }
 }
