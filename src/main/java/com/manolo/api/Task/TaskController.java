@@ -1,5 +1,6 @@
 package com.manolo.api.Task;
 
+import com.manolo.api.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -44,13 +45,23 @@ public class TaskController {
   }
 
   @PutMapping("/{id}")
-  public TaskModel update(@RequestBody TaskModel taskModel, HttpServletRequest request, @PathVariable UUID id){
+  public ResponseEntity update(@RequestBody TaskModel taskModel, HttpServletRequest request, @PathVariable UUID id){
+    var task = this.taskRepository.findById(id).orElse(null);
+
+    if(task == null) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Tarefa não encontrada!");
+    }
+
     var idUser = request.getAttribute("idUser");
 
-    taskModel.setIdUser((UUID) idUser);
-    taskModel.setId(id);
+    if(!task.getIdUser().equals(idUser)) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("O Usuário não tem permissão para alterar essa tarefa");
+    }
 
-    return this.taskRepository.save(taskModel);
+    Utils.copyNonNullProperties(taskModel, task);
+
+    var taskUpdated = this.taskRepository.save(task);
+    return ResponseEntity.ok().body(taskUpdated);
   }
 
 }
