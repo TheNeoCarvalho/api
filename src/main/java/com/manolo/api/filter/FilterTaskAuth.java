@@ -27,7 +27,7 @@ public class FilterTaskAuth extends OncePerRequestFilter {
 
         var serverPath = request.getServletPath();
 
-        if (serverPath.equals("/tasks/")) {
+        if (serverPath.startsWith("/tasks/")) {
             var authorization = request.getHeader("Authorization");
             var auth_encoded = authorization.substring("Basic".length()).trim();
 
@@ -42,14 +42,14 @@ public class FilterTaskAuth extends OncePerRequestFilter {
             var user = this.UserRepository.findByUsername(username);
 
             if (user == null) {
-                response.sendError(401, "User not authorized");
+                response.sendError(401, "User not authorized dd");
             } else {
                 var password_verify = BCrypt.verifyer().verify(password.toCharArray(), user.getPassword());
                 if (password_verify.verified) {
-                    response.sendError(401);
-                }
-                else {
+                    request.setAttribute("idUser", user.getId());
                     filterChain.doFilter(request, response);
+                } else {
+                    response.sendError(401, "User not authorized");
                 }
             }
         }else {
